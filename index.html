@@ -8,35 +8,101 @@
   <title>Scale-Tone</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { touch-action: manipulation; }
+    body { 
+      touch-action: manipulation; 
+    }
     
+    /* 鍵盤エリア全体の枠 */
     .keyboard-container {
-      position: relative; width: 100%; max-width: 800px; margin: 0 auto; flex-grow: 1;
+      --gap: 6px;
+      /* 8個の白鍵と7個の隙間から、1個あたりの正確な正方形サイズを算出 */
+      --key-size: calc((100% - (7 * var(--gap))) / 8);
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
     }
-    .white-keys {
-      display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 15%;
-    }
+
+    /* 黒鍵コンテナ: 上段 */
     .black-keys {
-      position: absolute; top: 0; left: 0; width: 100%; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding-left: calc(100% / 16); pointer-events: none;
+      display: flex;
+      gap: var(--gap);
+      margin-bottom: var(--gap);
+      /* 白鍵の半個分 + 隙間の半個分だけ右にズラすことで、隣り合う白鍵のちょうど真ん中に配置 */
+      margin-left: calc((var(--key-size) + var(--gap)) / 2);
+      pointer-events: none;
     }
+
+    /* 白鍵コンテナ: 下段 */
+    .white-keys {
+      display: flex;
+      gap: var(--gap);
+    }
+
+    /* ボタン共通（完全な正方形） */
     .key-btn {
-      aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.25rem; border-radius: 0.5rem; cursor: pointer; user-select: none; pointer-events: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.1s;
+      width: var(--key-size);
+      height: var(--key-size);
+      aspect-ratio: 1 / 1;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.25rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      pointer-events: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.1s, transform 0.05s;
     }
+
     .white-key {
-      background-color: white; color: #1f2937; border: 1px solid #d1d5db;
+      background-color: white;
+      color: #1f2937;
+      border: 1px solid #d1d5db;
     }
+
     .black-key {
-      background-color: #374151; color: white; width: calc(100% - 4px);
+      background-color: #374151; /* gray-700 */
+      color: white;
     }
-    .spacer { visibility: hidden; pointer-events: none; }
+
+    /* Clearボタン: C4（一番右の白鍵）の真上、黒鍵と同じ段に配置 */
+    .clear-key {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #ef4444; /* red-500 */
+      color: white;
+    }
+    .clear-key:active {
+      background-color: #dc2626; /* red-600 */
+      transform: scale(0.96);
+    }
+
+    /* 黒鍵がない場所（E-F間、B-C間）の透明なスペーサー */
+    .spacer { 
+      width: var(--key-size);
+      height: var(--key-size);
+      flex-shrink: 0;
+      visibility: hidden; 
+      pointer-events: none; 
+    }
+    
+    /* 音が鳴っている時のスタイル */
     .active {
-      background-color: #3b82f6 !important; color: white !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+      background-color: #3b82f6 !important; /* blue-500 */
+      color: white !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
   </style>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col p-4 overflow-hidden select-none">
   
-  <div class="flex flex-col sm:flex-row gap-3 mb-6 w-full max-w-4xl mx-auto">
+  <!-- 設定項目 (タイトルなし、隙間を詰めた配置) -->
+  <div class="flex flex-col sm:flex-row gap-3 mb-4 w-full max-w-[800px] mx-auto">
     <div class="flex-1">
       <label class="block text-xs font-bold text-gray-500 mb-1">Key (C3 - C4)</label>
       <select id="key-select" class="w-full p-2 border rounded bg-white text-base shadow-sm">
@@ -71,16 +137,23 @@
     </div>
   </div>
 
+  <!-- 鍵盤エリア -->
   <div class="keyboard-container">
+    <!-- 黒鍵 (上段) -->
     <div class="black-keys">
       <div class="key-btn black-key" id="key-1">C#</div>
       <div class="key-btn black-key" id="key-3">D#</div>
-      <div class="spacer"></div>
+      <div class="spacer"></div> <!-- EとFの間 -->
       <div class="key-btn black-key" id="key-6">F#</div>
       <div class="key-btn black-key" id="key-8">G#</div>
       <div class="key-btn black-key" id="key-10">A#</div>
-      <div class="spacer"></div>
+      <div class="spacer"></div> <!-- BとCの間 -->
     </div>
+
+    <!-- Clearボタン (C4の真上・黒鍵と同じ段) -->
+    <div class="key-btn clear-key" id="clear-btn" title="Clear All Notes">C</div>
+    
+    <!-- 白鍵 (下段) -->
     <div class="white-keys">
       <div class="key-btn white-key" id="key-0">C</div>
       <div class="key-btn white-key" id="key-2">D</div>
@@ -95,19 +168,34 @@
 
   <script>
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    let baseNote = 48;
+    let baseNote = 48; // C3
     let waveType = 'sine';
     let isMultiMode = false;
     const activeOscillators = {};
 
+    // 指定ルールに基づく12音名の配列（E#, B#を使わずF, Cとし、派生音は#表記）
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+    // 13半音のIDと間隔のマッピング
     const intervals = {
       'key-0': 0, 'key-1': 1, 'key-2': 2, 'key-3': 3, 'key-4': 4,
       'key-5': 5, 'key-6': 6, 'key-7': 7, 'key-8': 8, 'key-9': 9,
       'key-10': 10, 'key-11': 11, 'key-12': 12
     };
 
+    // キーに合わせてすべての鍵盤の文字を更新する関数
+    function updateKeyLabels() {
+      Object.keys(intervals).forEach(id => {
+        const btn = document.getElementById(id);
+        const currentNote = baseNote + intervals[id];
+        btn.innerText = noteNames[currentNote % 12];
+      });
+    }
+
     document.getElementById('key-select').addEventListener('change', (e) => {
       baseNote = parseInt(e.target.value);
+      stopAllNotes();
+      updateKeyLabels();
     });
     
     document.getElementById('wave-select').addEventListener('change', (e) => {
@@ -116,6 +204,11 @@
     
     document.getElementById('mode-select').addEventListener('change', (e) => {
       isMultiMode = e.target.value === 'multi';
+      stopAllNotes();
+    });
+
+    // Clearボタンのイベント
+    document.getElementById('clear-btn').addEventListener('click', () => {
       stopAllNotes();
     });
 
@@ -170,12 +263,16 @@
       btnElement.classList.add('active');
     }
 
+    // 各ボタンにクリックイベントを追加
     Object.keys(intervals).forEach(id => {
       const btn = document.getElementById(id);
       btn.addEventListener('click', () => {
         playNote(intervals[id], id, btn);
       });
     });
+
+    // 初期表示時のラベル更新
+    updateKeyLabels();
   </script>
 </body>
 </html>
