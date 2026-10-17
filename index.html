@@ -11,22 +11,56 @@
     body { touch-action: manipulation; }
     
     .keyboard-container {
-      position: relative; width: 100%; max-width: 800px; margin: 0 auto; flex-grow: 1;
+      --gap: 6px;
+      --key-size: calc((100% - 7 * var(--gap)) / 8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    @media (min-width: 640px) {
+      .keyboard-container {
+        --gap: 8px;
+        --key-size: calc((100% - 7 * var(--gap)) / 8);
+      }
     }
     .white-keys {
-      display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 15%;
+      display: flex;
+      gap: var(--gap);
+      width: 100%;
     }
     .black-keys {
-      position: absolute; top: 0; left: 0; width: 100%; display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; padding-left: calc(100% / 16); pointer-events: none;
+      display: flex;
+      gap: var(--gap);
+      width: 100%;
+      padding-left: calc((var(--key-size) + var(--gap)) / 2);
+      pointer-events: none;
+    }
+    .key-btn, .spacer {
+      width: var(--key-size);
+      aspect-ratio: 1 / 1;
+      flex-shrink: 0;
     }
     .key-btn {
-      aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.25rem; border-radius: 0.5rem; cursor: pointer; user-select: none; pointer-events: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.25rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+      pointer-events: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: all 0.1s;
     }
     .white-key {
       background-color: white; color: #1f2937; border: 1px solid #d1d5db;
     }
     .black-key {
-      background-color: #374151; color: white; width: calc(100% - 4px);
+      background-color: #374151; color: white;
     }
     .spacer { visibility: hidden; pointer-events: none; }
     .active {
@@ -36,7 +70,7 @@
 </head>
 <body class="bg-gray-100 h-screen flex flex-col p-4 overflow-hidden select-none">
   
-  <div class="flex flex-col sm:flex-row gap-3 mb-6 w-full max-w-4xl mx-auto">
+  <div class="flex flex-col sm:flex-row gap-3 mb-4 w-full max-w-[720px] mx-auto">
     <div class="flex-1">
       <label class="block text-xs font-bold text-gray-500 mb-1">Key (C3 - C4)</label>
       <select id="key-select" class="w-full p-2 border rounded bg-white text-base shadow-sm">
@@ -79,7 +113,6 @@
       <div class="key-btn black-key" id="key-6">F#</div>
       <div class="key-btn black-key" id="key-8">G#</div>
       <div class="key-btn black-key" id="key-10">A#</div>
-      <div class="spacer"></div>
     </div>
     <div class="white-keys">
       <div class="key-btn white-key" id="key-0">C</div>
