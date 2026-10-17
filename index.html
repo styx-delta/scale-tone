@@ -8,88 +8,104 @@
   <title>Scale-Tone</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      touch-action: manipulation;
+    body { 
+      touch-action: manipulation; 
     }
-
+    
     /* 鍵盤エリア全体の枠 */
     .keyboard-container {
-      --gap: 8px;
+      --gap: 6px;
+      /* 8個の白鍵と7個の隙間から、1個あたりの正確な正方形サイズを算出 */
+      --key-size: calc((100% - (7 * var(--gap))) / 8);
+      position: relative;
       width: 100%;
-      max-width: 760px;
+      max-width: 800px;
       margin: 0 auto;
     }
 
-    /* 黒鍵コンテナ: 8列グリッドにし、白鍵のピッチ((100% + gap) / 8)の半分だけ右へ平行移動 */
+    /* 黒鍵コンテナ: 上段 */
     .black-keys {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      display: flex;
       gap: var(--gap);
       margin-bottom: var(--gap);
-      transform: translateX(calc((100% + var(--gap)) / 16));
+      /* 白鍵の半個分 + 隙間の半個分だけ右にズラすことで、隣り合う白鍵のちょうど真ん中に配置 */
+      margin-left: calc((var(--key-size) + var(--gap)) / 2);
       pointer-events: none;
     }
 
-    /* 白鍵コンテナ: 8等分グリッド */
+    /* 白鍵コンテナ: 下段 */
     .white-keys {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
+      display: flex;
       gap: var(--gap);
     }
 
     /* ボタン共通（完全な正方形） */
     .key-btn {
-      width: 100%;
+      width: var(--key-size);
+      height: var(--key-size);
       aspect-ratio: 1 / 1;
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      font-size: clamp(0.95rem, 2.8vw, 1.35rem);
+      font-size: 1.25rem;
       border-radius: 0.5rem;
       cursor: pointer;
       user-select: none;
       pointer-events: auto;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: background-color 0.1s, transform 0.05s, box-shadow 0.1s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.1s, transform 0.05s;
     }
 
     .white-key {
-      background-color: #ffffff;
+      background-color: white;
       color: #1f2937;
       border: 1px solid #d1d5db;
     }
 
     .black-key {
-      background-color: #374151;
-      color: #ffffff;
-      border: 1px solid #1f2937;
+      background-color: #374151; /* gray-700 */
+      color: white;
     }
 
-    /* 黒鍵がない箇所の透明スペーサー */
-    .spacer {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      visibility: hidden;
-      pointer-events: none;
+    /* Clearボタン: C4（一番右の白鍵）の真上、黒鍵と同じ段に配置 */
+    .clear-key {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #ef4444; /* red-500 */
+      color: white;
+    }
+    .clear-key:active {
+      background-color: #dc2626; /* red-600 */
+      transform: scale(0.96);
     }
 
+    /* 黒鍵がない場所（E-F間、B-C間）の透明なスペーサー */
+    .spacer { 
+      width: var(--key-size);
+      height: var(--key-size);
+      flex-shrink: 0;
+      visibility: hidden; 
+      pointer-events: none; 
+    }
+    
     /* 音が鳴っている時のスタイル */
     .active {
-      background-color: #3b82f6 !important;
-      color: #ffffff !important;
-      border-color: #2563eb !important;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+      background-color: #3b82f6 !important; /* blue-500 */
+      color: white !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
     }
   </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col p-3 sm:p-4 overflow-x-hidden select-none">
-
-  <!-- 設定項目パネル -->
-  <div class="flex flex-col sm:flex-row gap-3 mb-4 w-full max-w-3xl mx-auto bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+<body class="bg-gray-100 h-screen flex flex-col p-4 overflow-hidden select-none">
+  
+  <!-- 設定項目 (タイトルなし、隙間を詰めた配置) -->
+  <div class="flex flex-col sm:flex-row gap-3 mb-4 w-full max-w-[800px] mx-auto">
     <div class="flex-1">
-      <label for="key-select" class="block text-xs font-bold text-gray-500 mb-1">Key (C3 - C4)</label>
-      <select id="key-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
+      <label class="block text-xs font-bold text-gray-500 mb-1">Key (C3 - C4)</label>
+      <select id="key-select" class="w-full p-2 border rounded bg-white text-base shadow-sm">
         <option value="48" selected>C3</option>
         <option value="49">C#3 / Db3</option>
         <option value="50">D3</option>
@@ -106,15 +122,15 @@
       </select>
     </div>
     <div class="flex-1">
-      <label for="wave-select" class="block text-xs font-bold text-gray-500 mb-1">Waveform</label>
-      <select id="wave-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
+      <label class="block text-xs font-bold text-gray-500 mb-1">Waveform</label>
+      <select id="wave-select" class="w-full p-2 border rounded bg-white text-base shadow-sm">
         <option value="sine" selected>Sine (純音)</option>
         <option value="square">Square (電子音)</option>
       </select>
     </div>
     <div class="flex-1">
-      <label for="mode-select" class="block text-xs font-bold text-gray-500 mb-1">Mode</label>
-      <select id="mode-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
+      <label class="block text-xs font-bold text-gray-500 mb-1">Mode</label>
+      <select id="mode-select" class="w-full p-2 border rounded bg-white text-base shadow-sm">
         <option value="single" selected>単音 (Single)</option>
         <option value="multi">複数音 (Multi)</option>
       </select>
@@ -132,9 +148,11 @@
       <div class="key-btn black-key" id="key-8">G#</div>
       <div class="key-btn black-key" id="key-10">A#</div>
       <div class="spacer"></div> <!-- BとCの間 -->
-      <div class="spacer"></div> <!-- 8列目の幅合わせ用 -->
     </div>
 
+    <!-- Clearボタン (C4の真上・黒鍵と同じ段) -->
+    <div class="key-btn clear-key" id="clear-btn" title="Clear All Notes">C</div>
+    
     <!-- 白鍵 (下段) -->
     <div class="white-keys">
       <div class="key-btn white-key" id="key-0">C</div>
@@ -155,67 +173,74 @@
     let isMultiMode = false;
     const activeOscillators = {};
 
-    // 音名表記ルール: 半音下が幹音なら#、E/Bの半音上はF/C、半音下が#付きなら幹音
+    // 指定ルールに基づく12音名の配列（E#, B#を使わずF, Cとし、派生音は#表記）
     const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-    // 13半音のIDと基準音からの半音差のマッピング
+    // 13半音のIDと間隔のマッピング
     const intervals = {
       'key-0': 0, 'key-1': 1, 'key-2': 2, 'key-3': 3, 'key-4': 4,
       'key-5': 5, 'key-6': 6, 'key-7': 7, 'key-8': 8, 'key-9': 9,
       'key-10': 10, 'key-11': 11, 'key-12': 12
     };
 
-    // 選択されたキーに合わせて13個の鍵盤のテキストを更新する
+    // キーに合わせてすべての鍵盤の文字を更新する関数
     function updateKeyLabels() {
-      for (let i = 0; i <= 12; i++) {
-        const btn = document.getElementById(`key-` + i);
-        if (btn) {
-          const noteIndex = (baseNote + i) % 12;
-          btn.textContent = noteNames[noteIndex];
-        }
-      }
+      Object.keys(intervals).forEach(id => {
+        const btn = document.getElementById(id);
+        const currentNote = baseNote + intervals[id];
+        btn.innerText = noteNames[currentNote % 12];
+      });
     }
 
-    // 周波数計算 (A4 = 440Hz, MIDIノート番号69)
+    document.getElementById('key-select').addEventListener('change', (e) => {
+      baseNote = parseInt(e.target.value);
+      stopAllNotes();
+      updateKeyLabels();
+    });
+    
+    document.getElementById('wave-select').addEventListener('change', (e) => {
+      waveType = e.target.value;
+    });
+    
+    document.getElementById('mode-select').addEventListener('change', (e) => {
+      isMultiMode = e.target.value === 'multi';
+      stopAllNotes();
+    });
+
+    // Clearボタンのイベント
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      stopAllNotes();
+    });
+
     function noteToFreq(note) {
       return 440 * Math.pow(2, (note - 69) / 12);
     }
 
-    // すべての音を止める
     function stopAllNotes() {
       Object.keys(activeOscillators).forEach(id => {
         stopNote(id, document.getElementById(id));
       });
     }
 
-    // 指定したボタンの音を止める
     function stopNote(btnId, btnElement) {
       if (activeOscillators[btnId]) {
         const { osc, gainNode } = activeOscillators[btnId];
-        const now = audioCtx.currentTime;
-        gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-        gainNode.gain.linearRampToValueAtTime(0, now + 0.05);
-        osc.stop(now + 0.05);
+        gainNode.gain.setValueAtTime(gainNode.gain.value, audioCtx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
+        osc.stop(audioCtx.currentTime + 0.05);
         delete activeOscillators[btnId];
-        if (btnElement) {
-          btnElement.classList.remove('active');
-        }
+        btnElement.classList.remove('active');
       }
     }
 
-    // 音を鳴らす（既に鳴っていれば止める）
     function playNote(interval, btnId, btnElement) {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
 
-      // 既に鳴っているボタンを再タップした場合は音を止める
       if (activeOscillators[btnId]) {
         stopNote(btnId, btnElement);
         return;
       }
 
-      // 単音モードの場合は他の音を止める
       if (!isMultiMode) {
         stopAllNotes();
       }
@@ -227,9 +252,8 @@
       osc.type = waveType;
       osc.frequency.value = noteToFreq(currentNote);
 
-      const now = audioCtx.currentTime;
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.5, now + 0.05);
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
 
       osc.connect(gainNode);
       gainNode.connect(audioCtx.destination);
@@ -239,29 +263,7 @@
       btnElement.classList.add('active');
     }
 
-    // キー変更イベント
-    document.getElementById('key-select').addEventListener('change', (e) => {
-      baseNote = parseInt(e.target.value, 10);
-      stopAllNotes();
-      updateKeyLabels();
-    });
-
-    // 音色変更イベント
-    document.getElementById('wave-select').addEventListener('change', (e) => {
-      waveType = e.target.value;
-      // 再生中の音があればその音色も即座に切り替える
-      Object.values(activeOscillators).forEach(({ osc }) => {
-        osc.type = waveType;
-      });
-    });
-
-    // モード変更イベント
-    document.getElementById('mode-select').addEventListener('change', (e) => {
-      isMultiMode = e.target.value === 'multi';
-      stopAllNotes();
-    });
-
-    // 各鍵盤ボタンにイベントを設定
+    // 各ボタンにクリックイベントを追加
     Object.keys(intervals).forEach(id => {
       const btn = document.getElementById(id);
       btn.addEventListener('click', () => {
