@@ -12,12 +12,11 @@
             grid-template-columns: repeat(16, 1fr);
             gap: 4px 0; /* 行間のギャップ。列間のギャップはオーバーラップするため0 */
             width: 100%;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
         .key {
-            aspect-ratio: 1 / 1; /* 正方形にする */
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -30,6 +29,19 @@
             transition: all 0.1s ease-in-out;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(0, 0, 0, 0.1);
+            height: 15vw; /* 縦画面での高さを確保 */
+            max-height: 80px;
+        }
+
+        /* 横画面（ランドスケープ）時のレスポンシブ調整 */
+        @media (orientation: landscape) {
+            .key {
+                height: 25vh; /* 横画面では高さを画面比率で確保して押しやすく */
+                font-size: clamp(1rem, 4vh, 1.5rem);
+            }
+            .keyboard-grid {
+                max-width: 100%;
+            }
         }
 
         /* 押下時のアニメーション */
@@ -78,9 +90,9 @@
         .key[data-note="10"] { grid-column: 12 / 14; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-8 px-4">
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-4 px-4 sm:py-8">
 
-    <div class="w-full max-w-lg space-y-6">
+    <div class="w-full max-w-4xl space-y-4 sm:space-y-6">
         <!-- ヘッダー -->
         <div class="text-center space-y-2">
             <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Pitch Pipe</h1>
@@ -103,7 +115,7 @@
                 <label for="waveSelect" class="text-sm font-semibold text-gray-700">音色 (Waveform)</label>
                 <select id="waveSelect" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-32 p-2">
                     <option value="sine">Sine (純音)</option>
-                    <option value="sawtooth">Sawtooth (倍音)</option>
+                    <option value="square">Square (電子音)</option>
                 </select>
             </div>
 
@@ -199,6 +211,7 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            // 画面回転時などに強制サスペンドされた状態から確実に復帰させる
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -226,12 +239,12 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
 
-            osc.type = waveSelect.value; // sine or sawtooth
+            osc.type = waveSelect.value; // sine or square
             osc.frequency.value = freq;
 
             // 音量設定とフェードイン（プツッというノイズを防ぐ）
-            // 音色はsawtoothの方が体感音量が大きいため少し調整
-            const maxVol = waveSelect.value === 'sawtooth' ? 0.05 : 0.2;
+            // 音色はsquareの方が体感音量が大きいため少し調整
+            const maxVol = waveSelect.value === 'square' ? 0.05 : 0.2;
             
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(maxVol, audioCtx.currentTime + 0.02);
