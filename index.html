@@ -13,22 +13,20 @@
         -webkit-touch-callout: none;
     }
     
-    /* 鍵盤が常に正方形を保ちながら、画面内に収まるための計算 */
-    .piano-container-inner {
+    /* 鍵盤コンテナ：16列のグリッドでピアノの配置を再現 */
+    .piano-grid {
         display: grid;
-        grid-template-columns: repeat(16, 1fr);
-        grid-template-rows: repeat(2, 1fr);
+        grid-template-columns: repeat(16, minmax(0, 1fr));
         gap: 4px;
-        /* 16列×2行 (つまり8:1の比率)。余白考慮で少し調整 */
-        width: min(100%, calc((100vh - 160px) * 4));
-        aspect-ratio: 8 / 1.05;
+        width: 100%;
         margin: 0 auto;
     }
     
+    /* ボタンを完全な正方形 (aspect-square) に固定 */
     .key-btn {
         grid-column-end: span 2;
+        aspect-ratio: 1 / 1;
         width: 100%;
-        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -39,7 +37,7 @@
         cursor: pointer;
         user-select: none;
         -webkit-user-select: none;
-        font-size: clamp(0.75rem, 2vw + 0.5rem, 1.5rem);
+        font-size: clamp(0.8rem, 2vw + 0.5rem, 1.25rem);
     }
     
     .key-active {
@@ -49,45 +47,24 @@
         transform: scale(0.95);
     }
     
-    .key-black { background-color: #374151; color: white; border: 2px solid #1f2937; }
-    .key-white { background-color: white; color: #1f2937; border: 2px solid #e5e7eb; }
-    
-    /* 実際のピアノと同じ配置 (黒鍵は上段、白鍵は下段) */
-    #btn-1 { grid-column: 2 / span 2; grid-row: 1; }  /* C# */
-    #btn-3 { grid-column: 4 / span 2; grid-row: 1; }  /* D# */
-    #btn-6 { grid-column: 8 / span 2; grid-row: 1; }  /* F# */
-    #btn-8 { grid-column: 10 / span 2; grid-row: 1; } /* G# */
-    #btn-10 { grid-column: 12 / span 2; grid-row: 1; } /* A# */
-    
-    #btn-0 { grid-column: 1 / span 2; grid-row: 2; }  /* C */
-    #btn-2 { grid-column: 3 / span 2; grid-row: 2; }  /* D */
-    #btn-4 { grid-column: 5 / span 2; grid-row: 2; }  /* E */
-    #btn-5 { grid-column: 7 / span 2; grid-row: 2; }  /* F */
-    #btn-7 { grid-column: 9 / span 2; grid-row: 2; }  /* G */
-    #btn-9 { grid-column: 11 / span 2; grid-row: 2; } /* A */
-    #btn-11 { grid-column: 13 / span 2; grid-row: 2; } /* B */
-    #btn-12 { grid-column: 15 / span 2; grid-row: 2; } /* C(高) */
-
-    /* 設定パネルの開閉アニメーション用 */
-    .settings-wrapper {
-        transition: all 0.3s ease-in-out;
-        overflow: hidden;
-    }
+    /* 上段（黒鍵）と下段（白鍵）の設定 */
+    .key-black { background-color: #374151; color: white; border: 2px solid #1f2937; grid-row: 1; }
+    .key-white { background-color: white; color: #1f2937; border: 2px solid #e5e7eb; grid-row: 2; }
   </style>
 </head>
-<body class="bg-gray-200 h-[100dvh] w-screen overflow-hidden flex flex-col items-center">
-  <!-- 全体のラッパー。スクロールさせない -->
-  <div class="w-full max-w-4xl mx-auto flex flex-col h-full p-2">
+<body class="bg-gray-200 min-h-screen flex flex-col items-center py-6 px-4">
+  
+  <div class="w-full max-w-3xl flex flex-col items-center">
     
     <!-- タイトル -->
-    <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-1 flex-shrink-0">Scale-Tone</h1>
+    <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">Scale-Tone</h1>
 
-    <!-- 設定項目パネル (初期表示は開いた状態) -->
-    <div id="settings-panel" class="settings-wrapper bg-white rounded-lg shadow-sm px-3 py-2 flex-shrink-0 max-h-64 opacity-100 mb-2">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <!-- 設定項目パネル (常に表示・余白を適正化) -->
+    <div class="w-full bg-white rounded-lg shadow-sm px-4 py-3 mb-10">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-bold text-gray-500 mb-1">Key (C3 - C4)</label>
-          <select id="key-select" class="w-full p-1 border rounded bg-gray-50 text-sm outline-none">
+          <select id="key-select" class="w-full p-2 border rounded bg-gray-50 text-sm outline-none cursor-pointer">
             <option value="48" selected>C3</option>
             <option value="49">C#3</option>
             <option value="50">D3</option>
@@ -105,14 +82,14 @@
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 mb-1">Waveform</label>
-          <select id="wave-select" class="w-full p-1 border rounded bg-gray-50 text-sm outline-none">
+          <select id="wave-select" class="w-full p-2 border rounded bg-gray-50 text-sm outline-none cursor-pointer">
             <option value="sine" selected>Sine (純音)</option>
             <option value="square">Square (電子音)</option>
           </select>
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-500 mb-1">Mode</label>
-          <select id="mode-select" class="w-full p-1 border rounded bg-gray-50 text-sm outline-none">
+          <select id="mode-select" class="w-full p-2 border rounded bg-gray-50 text-sm outline-none cursor-pointer">
             <option value="single" selected>単音 (Single)</option>
             <option value="multiple">和音 (Multiple)</option>
           </select>
@@ -120,16 +97,9 @@
       </div>
     </div>
 
-    <!-- 設定トグルボタン (パネルの直下に配置) -->
-    <div class="flex justify-center flex-shrink-0 mb-3">
-      <button id="toggle-settings-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 text-sm font-semibold py-1.5 px-6 rounded-full shadow transition-colors">
-        ⚙️ Settings
-      </button>
-    </div>
-
-    <!-- 鍵盤エリア (空きスペースを埋める) -->
-    <div class="flex-grow flex items-center justify-center min-h-0 w-full">
-      <div id="keyboard-container" class="piano-container-inner">
+    <!-- 鍵盤エリア (不自然な空きスペースを無くし、自然な位置に配置) -->
+    <div class="w-full">
+      <div id="keyboard-container" class="piano-grid">
         <!-- JSでボタンを生成 -->
       </div>
     </div>
@@ -142,8 +112,6 @@
     const keySelect = document.getElementById('key-select');
     const waveSelect = document.getElementById('wave-select');
     const modeSelect = document.getElementById('mode-select');
-    const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
-    const settingsPanel = document.getElementById('settings-panel');
 
     let baseNote = 48;
     let waveType = 'sine';
@@ -164,6 +132,23 @@
       { name: "A#", isBlack: true },
       { name: "B", isBlack: false },
       { name: "C", isBlack: false }
+    ];
+
+    // 16列グリッドにおける、各ボタンの開始位置 (1から始まる)
+    const gridStartCols = [
+      1,   // C
+      2,   // C#
+      3,   // D
+      4,   // D#
+      5,   // E
+      7,   // F  (EとFの間には黒鍵がないので6を飛ばす)
+      8,   // F#
+      9,   // G
+      10,  // G#
+      11,  // A
+      12,  // A#
+      13,  // B
+      15   // C(高) (BとCの間には黒鍵がないので14を飛ばす)
     ];
 
     function noteToFreq(note) { return 440 * Math.pow(2, (note - 69) / 12); }
@@ -222,12 +207,12 @@
         const btn = document.createElement('button');
         const btnId = `btn-${index}`;
         btn.id = btnId;
+        
         btn.className = `key-btn ${interval.isBlack ? 'key-black' : 'key-white'}`;
+        btn.style.gridColumnStart = gridStartCols[index];
         btn.innerHTML = `<span>${interval.name}</span>`;
 
-        // スマホとPC両方で快適に動作するよう pointerdown を使用
         btn.addEventListener('pointerdown', (e) => { 
-            // 左クリックまたはタッチのみ反応
             if(e.pointerType === 'mouse' && e.button !== 0) return;
             e.preventDefault(); 
             playNote(currentNote, btnId, btn); 
@@ -236,23 +221,6 @@
         keyboardContainer.appendChild(btn);
       });
     }
-
-    // 設定パネルの開閉処理 (高さを0にして余白も消すことで詰める)
-    toggleSettingsBtn.addEventListener('click', () => {
-      if (settingsPanel.style.maxHeight === '0px') {
-        settingsPanel.style.maxHeight = '250px';
-        settingsPanel.style.opacity = '1';
-        settingsPanel.style.paddingTop = '0.5rem';
-        settingsPanel.style.paddingBottom = '0.5rem';
-        settingsPanel.style.marginBottom = '0.5rem';
-      } else {
-        settingsPanel.style.maxHeight = '0px';
-        settingsPanel.style.opacity = '0';
-        settingsPanel.style.paddingTop = '0px';
-        settingsPanel.style.paddingBottom = '0px';
-        settingsPanel.style.marginBottom = '0px';
-      }
-    });
 
     keySelect.addEventListener('change', (e) => { baseNote = parseInt(e.target.value); renderKeyboard(); });
     waveSelect.addEventListener('change', (e) => { waveType = e.target.value; });
