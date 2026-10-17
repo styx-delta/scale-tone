@@ -47,6 +47,7 @@
       justify-content: center;
       font-weight: bold;
       font-size: clamp(0.95rem, 2.8vw, 1.35rem);
+      line-height: 1.1;
       border-radius: 0.5rem;
       cursor: pointer;
       user-select: none;
@@ -55,22 +56,13 @@
       transition: background-color 0.1s, transform 0.05s, box-shadow 0.1s;
     }
 
-    /* 音階名のラベル */
-    .note-label {
-      line-height: 1.1;
-    }
-
-    /* 移動ドの番号ラベル（1〜8） */
-    .degree-label {
+    /* 白鍵内の移動ド番号（1〜8） */
+    .degree-num {
       font-size: clamp(0.65rem, 1.8vw, 0.85rem);
-      line-height: 1;
-      margin-top: 2px;
-      opacity: 0.65;
       font-weight: 600;
-    }
-
-    .active .degree-label {
-      opacity: 0.9;
+      opacity: 0.55;
+      margin-top: 2px;
+      line-height: 1;
     }
 
     .white-key {
@@ -91,6 +83,41 @@
       aspect-ratio: 1 / 1;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    /* 8の白鍵の真上に配置する #/b ボタン用の枠（黒鍵行の右シフトを打ち消す） */
+    .accidental-slot {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateX(calc(-1 * (100% + var(--gap)) / 2));
+      pointer-events: none;
+    }
+
+    /* 控えめな灰色の #/b 切り替えボタン（鍵盤より小さめ） */
+    .accidental-btn {
+      width: 72%;
+      height: 72%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #e5e7eb;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      font-size: clamp(0.7rem, 2vw, 0.95rem);
+      cursor: pointer;
+      user-select: none;
+      pointer-events: auto;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      transition: background-color 0.1s, transform 0.05s;
+    }
+
+    .accidental-btn:active {
+      background-color: #d1d5db;
     }
 
     /* 音が鳴っている時のスタイル */
@@ -163,19 +190,21 @@
       <div class="key-btn black-key" id="key-8"><span class="note-label">G#</span></div>
       <div class="key-btn black-key" id="key-10"><span class="note-label">A#</span></div>
       <div class="spacer"></div> <!-- BとCの間 -->
-      <div class="spacer"></div> <!-- 8列目の幅合わせ用 -->
+      <div class="accidental-slot">
+        <button type="button" id="accidental-toggle" class="accidental-btn"># / b</button>
+      </div>
     </div>
 
     <!-- 白鍵 (下段) -->
     <div class="white-keys">
-      <div class="key-btn white-key" id="key-0"><span class="note-label">C</span><span class="degree-label">1</span></div>
-      <div class="key-btn white-key" id="key-2"><span class="note-label">D</span><span class="degree-label">2</span></div>
-      <div class="key-btn white-key" id="key-4"><span class="note-label">E</span><span class="degree-label">3</span></div>
-      <div class="key-btn white-key" id="key-5"><span class="note-label">F</span><span class="degree-label">4</span></div>
-      <div class="key-btn white-key" id="key-7"><span class="note-label">G</span><span class="degree-label">5</span></div>
-      <div class="key-btn white-key" id="key-9"><span class="note-label">A</span><span class="degree-label">6</span></div>
-      <div class="key-btn white-key" id="key-11"><span class="note-label">B</span><span class="degree-label">7</span></div>
-      <div class="key-btn white-key" id="key-12"><span class="note-label">C</span><span class="degree-label">8</span></div>
+      <div class="key-btn white-key" id="key-0"><span class="note-label">C</span><span class="degree-num">1</span></div>
+      <div class="key-btn white-key" id="key-2"><span class="note-label">D</span><span class="degree-num">2</span></div>
+      <div class="key-btn white-key" id="key-4"><span class="note-label">E</span><span class="degree-num">3</span></div>
+      <div class="key-btn white-key" id="key-5"><span class="note-label">F</span><span class="degree-num">4</span></div>
+      <div class="key-btn white-key" id="key-7"><span class="note-label">G</span><span class="degree-num">5</span></div>
+      <div class="key-btn white-key" id="key-9"><span class="note-label">A</span><span class="degree-num">6</span></div>
+      <div class="key-btn white-key" id="key-11"><span class="note-label">B</span><span class="degree-num">7</span></div>
+      <div class="key-btn white-key" id="key-12"><span class="note-label">C</span><span class="degree-num">8</span></div>
     </div>
   </div>
 
@@ -184,10 +213,12 @@
     let baseNote = 48; // C3
     let waveType = 'sine';
     let isMultiMode = false;
+    let useFlats = false;
     const activeOscillators = {};
 
-    // 音名表記ルール: 半音下が幹音なら#、E/Bの半音上はF/C、半音下が#付きなら幹音
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    // 音名表記（#系 / b系）
+    const sharpNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const flatNames  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
     // 13半音のIDと基準音からの半音差のマッピング
     const intervals = {
@@ -196,17 +227,18 @@
       'key-10': 10, 'key-11': 11, 'key-12': 12
     };
 
-    // 選択されたキーに合わせて13個の鍵盤のテキストを更新する
+    // 選択されたキーと #/b モードに合わせて13個の鍵盤のテキストを更新する
     function updateKeyLabels() {
+      const names = useFlats ? flatNames : sharpNames;
       for (let i = 0; i <= 12; i++) {
         const btn = document.getElementById(`key-` + i);
         if (btn) {
           const noteIndex = (baseNote + i) % 12;
-          const noteLabel = btn.querySelector('.note-label');
-          if (noteLabel) {
-            noteLabel.textContent = noteNames[noteIndex];
+          const labelSpan = btn.querySelector('.note-label');
+          if (labelSpan) {
+            labelSpan.textContent = names[noteIndex];
           } else {
-            btn.textContent = noteNames[noteIndex];
+            btn.textContent = names[noteIndex];
           }
         }
       }
@@ -295,6 +327,12 @@
     document.getElementById('mode-select').addEventListener('change', (e) => {
       isMultiMode = e.target.value === 'multi';
       stopAllNotes();
+    });
+
+    // # / b 切り替えボタンイベント
+    document.getElementById('accidental-toggle').addEventListener('click', () => {
+      useFlats = !useFlats;
+      updateKeyLabels();
     });
 
     // 各鍵盤ボタンにイベントを設定
