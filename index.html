@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Acappella Pitch Pipe</title>
+    <title>Scale-Tone</title>
+    <meta name="apple-mobile-web-app-title" content="Scale-Tone">
+    <meta name="application-name" content="Scale-Tone">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 鍵盤レイアウト用カスタムCSS */
@@ -12,11 +14,12 @@
             grid-template-columns: repeat(16, 1fr);
             gap: 4px 0; /* 行間のギャップ。列間のギャップはオーバーラップするため0 */
             width: 100%;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
         .key {
+            aspect-ratio: 1 / 1; /* 正方形にする */
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -29,19 +32,6 @@
             transition: all 0.1s ease-in-out;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(0, 0, 0, 0.1);
-            height: 15vw; /* 縦画面での高さを確保 */
-            max-height: 80px;
-        }
-
-        /* 横画面（ランドスケープ）時のレスポンシブ調整 */
-        @media (orientation: landscape) {
-            .key {
-                height: 25vh; /* 横画面では高さを画面比率で確保して押しやすく */
-                font-size: clamp(1rem, 4vh, 1.5rem);
-            }
-            .keyboard-grid {
-                max-width: 100%;
-            }
         }
 
         /* 押下時のアニメーション */
@@ -88,15 +78,33 @@
         .key[data-note="6"]  { grid-column: 8 / 10; }
         .key[data-note="8"]  { grid-column: 10 / 12; }
         .key[data-note="10"] { grid-column: 12 / 14; }
+
+        /* 横画面（ランドスケープ）時のスタイル調整 */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .keyboard-grid {
+                max-width: 100%;
+            }
+            .key {
+                aspect-ratio: auto;
+                height: 14vh;
+            }
+            /* ヘッダーなどの余白を詰める */
+            .w-full.space-y-6 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0.75rem;
+            }
+            .mt-8 {
+                margin-top: 1rem;
+            }
+        }
     </style>
 </head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-8 px-4">
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-4 px-4 sm:py-8">
 
     <div class="w-full max-w-4xl space-y-4 sm:space-y-6">
         <!-- ヘッダー -->
-        <div class="text-center space-y-2">
-            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Pitch Pipe</h1>
-            <p class="text-sm text-gray-500">Tap to toggle notes</p>
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Scale-Tone</h1>
         </div>
 
         <!-- コントロールパネル -->
@@ -115,7 +123,7 @@
                 <label for="waveSelect" class="text-sm font-semibold text-gray-700">音色 (Waveform)</label>
                 <select id="waveSelect" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-32 p-2">
                     <option value="sine">Sine (純音)</option>
-                    <option value="square">Square (電子音)</option>
+                    <option value="sawtooth">Sawtooth (倍音)</option>
                 </select>
             </div>
 
@@ -211,7 +219,6 @@
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // 画面回転時などに強制サスペンドされた状態から確実に復帰させる
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -239,12 +246,12 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
 
-            osc.type = waveSelect.value; // sine or square
+            osc.type = waveSelect.value; // sine or sawtooth
             osc.frequency.value = freq;
 
             // 音量設定とフェードイン（プツッというノイズを防ぐ）
-            // 音色はsquareの方が体感音量が大きいため少し調整
-            const maxVol = waveSelect.value === 'square' ? 0.05 : 0.2;
+            // 音色はsawtoothの方が体感音量が大きいため少し調整
+            const maxVol = waveSelect.value === 'sawtooth' ? 0.05 : 0.2;
             
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(maxVol, audioCtx.currentTime + 0.02);
@@ -263,6 +270,11 @@
         function stopNote(interval) {
             const note = activeNotes.get(interval);
             if (note) {
+                // AudioContextの状態確認（横画面回転時などにサスペンドされている場合の対策）
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
                 // フェードアウトさせてから停止（ノイズ防止）
                 note.gain.gain.cancelScheduledValues(audioCtx.currentTime);
                 note.gain.gain.setValueAtTime(note.gain.gain.value, audioCtx.currentTime);
@@ -293,6 +305,16 @@
 
         // --- イベントリスナー ---
 
+        // iOS Safari等での画面回転時のAudioContextサスペンド対策
+        const resumeAudioContext = () => {
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        };
+        window.addEventListener('resize', resumeAudioContext);
+        window.addEventListener('orientationchange', resumeAudioContext);
+        document.addEventListener('touchstart', resumeAudioContext, { passive: true });
+
         // キーが変更されたら音を止めてラベルを更新
         keySelect.addEventListener('change', () => {
             stopAllNotes();
@@ -312,9 +334,11 @@
         // 「すべて止める」ボタン
         stopAllBtn.addEventListener('click', stopAllNotes);
 
-        // 各鍵盤ボタンのクリックイベント
+        // 各鍵盤ボタンのイベント
+        // clickの代わりに pointerdown を使うことで、スマホでの反応速度向上とAudioContextの確実な再開を狙う
         keys.forEach(key => {
-            key.addEventListener('click', () => {
+            key.addEventListener('pointerdown', (e) => {
+                e.preventDefault(); // タッチ時の不要なスクロールやダブルタップズーム動作を防止
                 playNote(parseInt(key.dataset.note), key);
             });
         });
