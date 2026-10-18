@@ -60,7 +60,7 @@
     .degree-num {
       font-size: clamp(0.65rem, 1.8vw, 0.85rem);
       font-weight: 600;
-      opacity: 0.55;
+      opacity: 0.6;
       margin-top: 2px;
       line-height: 1;
     }
@@ -96,7 +96,6 @@
       pointer-events: none;
     }
 
-    /* 控えめな灰色の #/b 切り替えボタン（鍵盤より小さめ） */
     .accidental-btn {
       width: 72%;
       height: 72%;
@@ -107,7 +106,7 @@
       color: #4b5563;
       border: 1px solid #d1d5db;
       border-radius: 0.375rem;
-      font-weight: 600;
+      font-weight: bold;
       font-size: clamp(0.7rem, 2vw, 0.95rem);
       cursor: pointer;
       user-select: none;
@@ -133,7 +132,7 @@
 
   <!-- 設定項目パネル -->
   <div class="flex flex-col sm:flex-row gap-3 mb-4 w-full max-w-3xl mx-auto bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-    <div class="flex-1">
+    <div class="flex-1 min-w-0">
       <label for="key-select" class="block text-xs font-bold text-gray-500 mb-1">Key (C2 - C4)</label>
       <select id="key-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
         <option value="36">C2</option>
@@ -163,14 +162,32 @@
         <option value="60">C4</option>
       </select>
     </div>
-    <div class="flex-1">
+    <div class="flex-1 min-w-0">
+      <label for="sig-select" class="block text-xs font-bold text-gray-500 mb-1">Signature</label>
+      <select id="sig-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
+        <option value="6">#6(F# Major,D# minor)</option>
+        <option value="11">#5(B Major,G# minor)</option>
+        <option value="4">#4(E Major,C# minor)</option>
+        <option value="9">#3(A Major,F# minor)</option>
+        <option value="2">#2(D Major,B minor)</option>
+        <option value="7">#1(G Major,E minor)</option>
+        <option value="0" selected>0(C Major,A minor)</option>
+        <option value="5">b1(F Major,D minor)</option>
+        <option value="10">b2(Bb Major,G minor)</option>
+        <option value="3">b3(Eb Major,C minor)</option>
+        <option value="8">b4(Ab Major,F minor)</option>
+        <option value="1">b5(Db Major,Bb minor)</option>
+        <option value="6_flat">b6(Gb Major,Eb minor)</option>
+      </select>
+    </div>
+    <div class="flex-1 min-w-0">
       <label for="wave-select" class="block text-xs font-bold text-gray-500 mb-1">Waveform</label>
       <select id="wave-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
         <option value="sine" selected>Sine (純音)</option>
         <option value="square">Square (電子音)</option>
       </select>
     </div>
-    <div class="flex-1">
+    <div class="flex-1 min-w-0">
       <label for="mode-select" class="block text-xs font-bold text-gray-500 mb-1">Mode</label>
       <select id="mode-select" class="w-full p-2 border rounded bg-gray-50 text-base shadow-sm">
         <option value="single" selected>単音 (Single)</option>
@@ -183,28 +200,28 @@
   <div class="keyboard-container">
     <!-- 黒鍵 (上段) -->
     <div class="black-keys">
-      <div class="key-btn black-key" id="key-1"><span class="note-label">C#</span></div>
-      <div class="key-btn black-key" id="key-3"><span class="note-label">D#</span></div>
+      <div class="key-btn black-key" id="key-1">C#</div>
+      <div class="key-btn black-key" id="key-3">D#</div>
       <div class="spacer"></div> <!-- EとFの間 -->
-      <div class="key-btn black-key" id="key-6"><span class="note-label">F#</span></div>
-      <div class="key-btn black-key" id="key-8"><span class="note-label">G#</span></div>
-      <div class="key-btn black-key" id="key-10"><span class="note-label">A#</span></div>
+      <div class="key-btn black-key" id="key-6">F#</div>
+      <div class="key-btn black-key" id="key-8">G#</div>
+      <div class="key-btn black-key" id="key-10">A#</div>
       <div class="spacer"></div> <!-- BとCの間 -->
       <div class="accidental-slot">
-        <button type="button" id="accidental-toggle" class="accidental-btn"># / b</button>
+        <div class="accidental-btn" id="accidental-toggle"># / b</div>
       </div>
     </div>
 
     <!-- 白鍵 (下段) -->
     <div class="white-keys">
-      <div class="key-btn white-key" id="key-0"><span class="note-label">C</span><span class="degree-num">1</span></div>
-      <div class="key-btn white-key" id="key-2"><span class="note-label">D</span><span class="degree-num">2</span></div>
-      <div class="key-btn white-key" id="key-4"><span class="note-label">E</span><span class="degree-num">3</span></div>
-      <div class="key-btn white-key" id="key-5"><span class="note-label">F</span><span class="degree-num">4</span></div>
-      <div class="key-btn white-key" id="key-7"><span class="note-label">G</span><span class="degree-num">5</span></div>
-      <div class="key-btn white-key" id="key-9"><span class="note-label">A</span><span class="degree-num">6</span></div>
-      <div class="key-btn white-key" id="key-11"><span class="note-label">B</span><span class="degree-num">7</span></div>
-      <div class="key-btn white-key" id="key-12"><span class="note-label">C</span><span class="degree-num">8</span></div>
+      <div class="key-btn white-key" id="key-0"><span class="note-name">C</span><span class="degree-num">1</span></div>
+      <div class="key-btn white-key" id="key-2"><span class="note-name">D</span><span class="degree-num">2</span></div>
+      <div class="key-btn white-key" id="key-4"><span class="note-name">E</span><span class="degree-num">3</span></div>
+      <div class="key-btn white-key" id="key-5"><span class="note-name">F</span><span class="degree-num">4</span></div>
+      <div class="key-btn white-key" id="key-7"><span class="note-name">G</span><span class="degree-num">5</span></div>
+      <div class="key-btn white-key" id="key-9"><span class="note-name">A</span><span class="degree-num">6</span></div>
+      <div class="key-btn white-key" id="key-11"><span class="note-name">B</span><span class="degree-num">7</span></div>
+      <div class="key-btn white-key" id="key-12"><span class="note-name">C</span><span class="degree-num">8</span></div>
     </div>
   </div>
 
@@ -213,10 +230,10 @@
     let baseNote = 48; // C3
     let waveType = 'sine';
     let isMultiMode = false;
-    let useFlats = false;
+    let useFlat = false;
     const activeOscillators = {};
 
-    // 音名表記（#系 / b系）
+    // 音名表記ルール (#表記 / b表記)
     const sharpNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatNames  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
@@ -227,16 +244,19 @@
       'key-10': 10, 'key-11': 11, 'key-12': 12
     };
 
-    // 選択されたキーと #/b モードに合わせて13個の鍵盤のテキストを更新する
+    const keySelect = document.getElementById('key-select');
+    const sigSelect = document.getElementById('sig-select');
+
+    // 選択されたキーに合わせて13個の鍵盤のテキストを更新する
     function updateKeyLabels() {
-      const names = useFlats ? flatNames : sharpNames;
+      const names = useFlat ? flatNames : sharpNames;
       for (let i = 0; i <= 12; i++) {
         const btn = document.getElementById(`key-` + i);
         if (btn) {
           const noteIndex = (baseNote + i) % 12;
-          const labelSpan = btn.querySelector('.note-label');
-          if (labelSpan) {
-            labelSpan.textContent = names[noteIndex];
+          const nameSpan = btn.querySelector('.note-name');
+          if (nameSpan) {
+            nameSpan.textContent = names[noteIndex];
           } else {
             btn.textContent = names[noteIndex];
           }
@@ -307,9 +327,33 @@
       btnElement.classList.add('active');
     }
 
-    // キー変更イベント
-    document.getElementById('key-select').addEventListener('change', (e) => {
+    // キー変更イベント（Signatureセレクトも同期）
+    keySelect.addEventListener('change', (e) => {
       baseNote = parseInt(e.target.value, 10);
+      const pitchClass = baseNote % 12;
+      if (pitchClass === 6) {
+        sigSelect.value = useFlat ? '6_flat' : '6';
+      } else {
+        sigSelect.value = String(pitchClass);
+      }
+      stopAllNotes();
+      updateKeyLabels();
+    });
+
+    // 調号（Signature）変更イベント（Keyセレクトも同期）
+    sigSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      const targetPitchClass = val === '6_flat' ? 6 : parseInt(val, 10);
+
+      // 現在選択されているオクターブ（C2=36〜B2=47はオクターブ2、C3=48〜B3=59やC4=60はオクターブ3基準）を維持
+      let currentOctaveBase = Math.floor(baseNote / 12) * 12;
+      if (currentOctaveBase >= 60) {
+        currentOctaveBase = 48; // C4(60)が選ばれていた場合はC3〜B3の範囲で移動
+      }
+
+      baseNote = currentOctaveBase + targetPitchClass;
+      keySelect.value = String(baseNote);
+
       stopAllNotes();
       updateKeyLabels();
     });
@@ -329,9 +373,12 @@
       stopAllNotes();
     });
 
-    // # / b 切り替えボタンイベント
+    // # / b 表記切り替えイベント
     document.getElementById('accidental-toggle').addEventListener('click', () => {
-      useFlats = !useFlats;
+      useFlat = !useFlat;
+      if (baseNote % 12 === 6) {
+        sigSelect.value = useFlat ? '6_flat' : '6';
+      }
       updateKeyLabels();
     });
 
